@@ -17,6 +17,31 @@ $vscodeConfig["mcp.connector"] = @{
     "type" = "kusto"
     "command" = "node src/kustoConnector.js"
 }
+$vscodeConfig["mcp.queryTemplates"] = @{
+    "template1" = "Kusto query template 1"
+    "template2" = "Kusto query template 2"
+    "template3" = "Kusto query template 3"
+}
+
+# Add configuration for auto-completion, syntax highlighting, and error checking for Kusto query syntax
+$vscodeConfig["editor.quickSuggestions"] = @{
+    "other" = $true
+    "comments" = $false
+    "strings" = $true
+}
+$vscodeConfig["editor.suggestOnTriggerCharacters"] = $true
+$vscodeConfig["editor.suggestSelection"] = "first"
+$vscodeConfig["editor.acceptSuggestionOnEnter"] = "on"
+$vscodeConfig["editor.acceptSuggestionOnCommitCharacter"] = $true
+$vscodeConfig["editor.wordBasedSuggestions"] = $true
+$vscodeConfig["editor.parameterHints.enabled"] = $true
+$vscodeConfig["editor.hover.enabled"] = $true
+
+# Add configuration for visual query builder in VSCode
+$vscodeConfig["mcp.visualQueryBuilder"] = @{
+    "enabled" = $true
+    "command" = "MCP: Open Visual Query Builder"
+}
 
 $vscodeConfig | ConvertTo-Json | Set-Content $vscodeConfigPath
 
