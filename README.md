@@ -1,6 +1,6 @@
-# darbot-kusto-mcp
+# darbot-kusto
 
-An MCP connector for running Kusto queries from VSCode.
+A connector for running Kusto queries from VSCode.
 
 ## Installation
 

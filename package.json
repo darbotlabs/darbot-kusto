@@ -1,7 +1,7 @@
 {
-  "name": "darbot-kusto-mcp",
+  "name": "darbot-kusto",
   "version": "1.0.0",
-  "description": "An MCP connector for running Kusto queries from VSCode",
+  "description": "A connector for running Kusto queries from VSCode",
   "main": "src/mcpConnector.js",
   "scripts": {
     "install-dependencies": "pwsh ./install.ps1"

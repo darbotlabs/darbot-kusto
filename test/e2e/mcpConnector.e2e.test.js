@@ -29,9 +29,9 @@ describe('KustoMCPConnector End-to-End Tests', () => {
 
       const config = JSON.parse(data);
       expect(config['mcp.connector']).to.exist;
-      expect(config['mcp.connector'].name).to.equal('darbot-kusto-mcp');
+      expect(config['mcp.connector'].name).to.equal('darbot-kusto');
       expect(config['mcp.connector'].type).to.equal('kusto');
-      expect(config['mcp.connector'].command).to.equal('node src/mcpConnector.js');
+      expect(config['mcp.connector'].command).to.equal('node src/kustoConnector.js');
       done();
     });
   });

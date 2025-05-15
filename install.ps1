@@ -13,9 +13,9 @@ if (-Not (Test-Path $vscodeConfigPath)) {
 
 $vscodeConfig = Get-Content $vscodeConfigPath | Out-String | ConvertFrom-Json
 $vscodeConfig["mcp.connector"] = @{
-    "name" = "darbot-kusto-mcp"
+    "name" = "darbot-kusto"
     "type" = "kusto"
-    "command" = "node src/mcpConnector.js"
+    "command" = "node src/kustoConnector.js"
 }
 
 $vscodeConfig | ConvertTo-Json | Set-Content $vscodeConfigPath
