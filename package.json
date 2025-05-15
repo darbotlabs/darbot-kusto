@@ -1,0 +1,17 @@
+{
+  "name": "darbot-kusto-mcp",
+  "version": "1.0.0",
+  "description": "An MCP connector for running Kusto queries from VSCode",
+  "main": "src/mcpConnector.js",
+  "scripts": {
+    "install-dependencies": "pwsh ./install.ps1"
+  },
+  "dependencies": {
+    "@microsoft/microsoft-graph-client": "^3.0.0",
+    "@microsoft/microsoft-graph-types": "^1.0.0",
+    "@microsoft/microsoft-graph-auth": "^1.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "keywords": []
+}
