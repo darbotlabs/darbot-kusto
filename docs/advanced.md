@@ -106,3 +106,41 @@ async function run() {
 ```
 
 This example is illustrative. For robust programmatic interaction with Kusto, consider using the official Azure Kusto SDKs directly.
+
+## Audit Command
+
+The `audit` command allows you to perform an end-to-end functionality audit by running a series of predefined queries and validating their results.
+
+**CLI:**
+
+```sh
+npx @darbotlabs/darbot-kusto --cluster <YourCluster> --database <YourDatabase> audit
+```
+
+This command will execute a set of predefined queries and check their results to ensure that the system is functioning correctly. The results of the audit will be displayed in the console.
+
+**Example Output:**
+
+```
+Audit completed successfully: [
+  { query: "StormEvents | count", status: "success" },
+  { query: "StormEvents | take 10", status: "success" },
+  { query: "StormEvents | summarize count() by State", status: "success" }
+]
+```
+
+If any of the queries fail, the output will indicate which query failed and provide an error message.
+
+**MCP Configuration (`mcp.json`):**
+
+```json
+"darbot-kusto": {
+  "command": "npx",
+  "args": [
+    "@darbotlabs/darbot-kusto",
+    "audit"
+  ]
+}
+```
+
+This configuration will allow you to run the audit command from the MCP UI.

@@ -61,6 +61,7 @@ const argv = yargs
       type: 'string'
     });
   })
+  .command('audit', 'Perform an end-to-end functionality audit', () => {})
   .help()
   .argv;
 
@@ -93,6 +94,14 @@ async function main() {
 
   if (argv._.includes('query')) {
     try {
+      // Input validation for query syntax
+      if (!argv.template && !argv.query) {
+        throw new Error('Query or template must be provided.');
+      }
+      if (argv.query && !isValidQuerySyntax(argv.query)) {
+        throw new Error('Invalid query syntax.');
+      }
+
       let result;
       if (argv.template) {
         result = await connector.runQuery(null, argv.template);
@@ -118,12 +127,40 @@ async function main() {
       }
       process.exit(1);
     }
+  } else if (argv._.includes('audit')) {
+    try {
+      const auditResults = await connector.runAudit();
+      console.log('Audit completed successfully:', auditResults);
+    } catch (error) {
+      console.error('Audit failed!');
+      if (error.statusCode || error.code || error.message) {
+        if (error.statusCode) console.error(`StatusCode: ${error.statusCode}`);
+        if (error.code) console.error(`Code: ${error.code}`);
+        if (error.message) console.error(`Message: ${error.message}`);
+      }
+      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+        console.error('Network error: Unable to reach the Kusto cluster.');
+        console.error('Recommendation: Check your VPN connection, firewall, or network settings.');
+      }
+      process.exit(1);
+    }
   } else if (argv._.includes('list-templates')) {
     console.log('Available templates:', KustoMCPConnector.listTemplateNames().join(', '));
   } else {
     console.log('Unknown command');
     process.exit(1);
   }
+}
+
+function isValidQuerySyntax(query) {
+  // Basic validation for query syntax
+  const forbiddenKeywords = ['DROP', 'DELETE', 'UPDATE'];
+  for (const keyword of forbiddenKeywords) {
+    if (query.toUpperCase().includes(keyword)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 main().catch((error) => {

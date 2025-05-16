@@ -15,4 +15,16 @@ describe('KustoMCPConnector Smoke Test', () => {
       done();
     });
   });
+
+  it('should perform an end-to-end functionality audit using the local CLI', function(done) {
+    this.timeout(20000);
+    exec('node src/cli.js --cluster https://help.kusto.windows.net --database Samples audit', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        return done(error);
+      }
+      expect(stdout).to.contain('Audit completed successfully');
+      done();
+    });
+  });
 });

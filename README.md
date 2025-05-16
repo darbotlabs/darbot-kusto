@@ -50,3 +50,30 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 ## License
 
 This project is licensed under the MIT License.
+
+## Additional Resources
+
+- [Advanced Usage](./docs/advanced.md)
+- [Troubleshooting](./docs/troubleshooting.md)
+- [Kusto Query Language](./src/resources/Kusto-Query-Language/README.md)
+
+## Exposing Functionality
+
+### VSCode Extension
+
+The `darbot-kusto` extension for VSCode allows you to run Kusto queries directly from the editor. You can install it from the VSCode marketplace and configure it to use your Kusto cluster and database.
+
+### MCP Connector
+
+The MCP connector allows you to run Kusto queries from the MCP UI. You can configure it by adding the following to your MCP config:
+
+```json
+"darbot-kusto": {
+  "command": "npx",
+  "args": [
+    "@darbotlabs/darbot-kusto"
+  ]
+}
+```
+
+This will allow you to run Kusto queries securely using your Windows/Entra/az login credentials by default.

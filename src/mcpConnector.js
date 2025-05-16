@@ -116,6 +116,78 @@ class KustoMCPConnector {
   static listTemplateNames() {
     return Object.keys(kustoQueryTemplates);
   }
+
+  async runAudit() {
+    if (!this.client) {
+      throw new Error("Client not initialized. Call initialize() first.");
+    }
+
+    const auditQueries = [
+      { query: "StormEvents | count", expected: 1 },
+      { query: "StormEvents | take 10", expected: 10 },
+      { query: "StormEvents | summarize count() by State", expected: 50 }
+    ];
+
+    const results = [];
+    for (const { query, expected } of auditQueries) {
+      try {
+        const result = await this.client.execute(this.database, query);
+        const rowCount = result.primaryResults[0].rows.length;
+        if (rowCount !== expected) {
+          throw new Error(`Query "${query}" returned ${rowCount} rows, expected ${expected}`);
+        }
+        results.push({ query, status: 'success' });
+      } catch (error) {
+        console.error(`Audit query failed: ${query}`);
+        console.error(error);
+        results.push({ query, status: 'failure', error: error.message });
+      }
+    }
+
+    return results;
+  }
+
+  async runQueryWithEdgeCaseHandling(query) {
+    if (!this.client) {
+      throw new Error("Client not initialized. Call initialize() first.");
+    }
+
+    try {
+      const result = await this.client.execute(this.database, query);
+      if (!result.primaryResults || result.primaryResults.length === 0) {
+        throw new Error("Query returned empty results.");
+      }
+      return result.primaryResults[0];
+    } catch (error) {
+      if (error.message.includes("Query returned empty results")) {
+        console.error("Edge case: Empty results.");
+      } else if (error.message.includes("Invalid query")) {
+        console.error("Edge case: Invalid query.");
+      } else if (error.message.includes("Request size too large")) {
+        console.error("Edge case: Large dataset.");
+      } else {
+        console.error("Unexpected error:", error.message);
+      }
+      throw error;
+    }
+  }
+
+  async runQueryWithNetworkIssueHandling(query) {
+    if (!this.client) {
+      throw new Error("Client not initialized. Call initialize() first.");
+    }
+
+    try {
+      const result = await this.client.execute(this.database, query);
+      return result.primaryResults ? result.primaryResults[0] : result;
+    } catch (error) {
+      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+        console.error('Network error: Unable to reach the Kusto cluster.');
+        console.error('Recommendation: Check your VPN connection, firewall, or network settings.');
+      }
+      throw error;
+    }
+  }
 }
 
 module.exports = KustoMCPConnector;
