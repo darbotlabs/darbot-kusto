@@ -15,7 +15,8 @@
   "dependencies": {
     "@azure/identity": "^4.0.0",
     "azure-kusto-data": "^7.0.0",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "inquirer": "^9.2.8"
   },
   "devDependencies": {
     "chai": "^4.3.0",
