@@ -1,6 +1,6 @@
 {
   "name": "@darbotlabs/darbot-kusto",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "A connector for running Kusto queries from VSCode",
   "main": "src/mcpConnector.js",
   "bin": {
@@ -51,8 +51,7 @@
         "label": "Darbot Kusto",
         "command": "npx",
         "args": [
-          "@darbotlabs/darbot-kusto",
-          "server"
+          "@darbotlabs/darbot-kusto"
         ]
       }
     ]
