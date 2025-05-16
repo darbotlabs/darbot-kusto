@@ -1,21 +1,7 @@
-
-
-
 const KustoMCPConnector = require('./mcpConnector');
 const yargs = require('yargs');
 const kustoQueryTemplates = require('./kustoQueryTemplates');
 
-const argv = yargs
-  .option('cluster', {
-    alias: 'c',
-    describe: 'Kusto cluster URL',
-    type: 'string'
-  })
-  .option('database', {
-    alias: 'd',
-    describe: 'Kusto database name',
-    type: 'string'
-  })
 // Config helper for persistent user config
 const fs = require('fs');
 const path = require('path');
@@ -36,6 +22,18 @@ function writeConfig(cfg) {
   fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
 }
+
+const argv = yargs
+  .option('cluster', {
+    alias: 'c',
+    describe: 'Kusto cluster URL',
+    type: 'string'
+  })
+  .option('database', {
+    alias: 'd',
+    describe: 'Kusto database name',
+    type: 'string'
+  })
   .option('token', {
     describe: 'AAD access token',
     type: 'string'
