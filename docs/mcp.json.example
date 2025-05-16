@@ -1,0 +1,6 @@
+{
+  "darbot-kusto": {
+    "command": "npx",
+    "args": ["@darbotlabs/darbot-kusto"]
+  }
+}

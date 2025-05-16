@@ -1,97 +1,45 @@
+
 # darbot-kusto
 
 A connector for running Kusto queries from VSCode.
+Darbot Labs: <https://github.com/darbotlabs/darbot-kusto>
 
-## Installation
+## Quick Start
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/darbotlabs/darbot-kusto.git
-   cd darbot-kusto
-   ```
+Add this to your MCP config (VS Code, Claude Desktop, etc):
 
-2. Install dependencies and configure VSCode:
-   ```sh
-   npm run install-dependencies
-   ```
+```json
+"darbot-kusto": {
+  "command": "npx",
+  "args": [
+    "@darbotlabs/darbot-kusto"
+  ]
+}
+```
 
-## Usage
+You can now start the server from the MCP UI and run Kusto queries securely using your Windows/Entra/az login credentials by default.
+For more detailed installation, usage, and advanced features, please see the [documentation in the docs folder](./docs/).
 
-### Using the MCP Connector in VSCode
+## Authentication
 
-1. Open VSCode in the project directory:
-   ```sh
-   code .
-   ```
+By default, authentication uses your Windows/Entra/az login credentials (via DefaultAzureCredential).
+You can also provide a token or AAD app credentials. See [docs/troubleshooting.md](./docs/troubleshooting.md) for more details.
 
-2. Open the command palette (Ctrl+Shift+P) and search for "MCP: Run Kusto Query".
+## CLI Usage
 
-3. Enter your Kusto query and press Enter. The results will be displayed in the output pane.
+```sh
+npx @darbotlabs/darbot-kusto --cluster <ClusterUrl> --database <Database> query "<Your Kusto Query>"
+```
 
-### Using the Standalone CLI Tool
+For more options, run:
 
-1. Run a Kusto query from the command line:
-   ```sh
-   node src/cli.js query "<Your Kusto Query>"
-   ```
+```sh
+npx @darbotlabs/darbot-kusto --help
+```
 
-   Replace `<Your Kusto Query>` with your actual Kusto query.
+## Contributing
 
-### Using Query Templates
-
-1. You can use predefined query templates by specifying the template name instead of writing the full query.
-
-2. To use a query template in VSCode, open the command palette (Ctrl+Shift+P) and search for "MCP: Run Kusto Query". Enter the template name and press Enter. The results will be displayed in the output pane.
-
-3. To use a query template from the command line, run:
-   ```sh
-   node src/cli.js query --template <TemplateName>
-   ```
-
-   Replace `<TemplateName>` with the name of the query template you want to use.
-
-### Using the Visual Query Builder in VSCode
-
-1. Open VSCode in the project directory:
-   ```sh
-   code .
-   ```
-
-2. Open the command palette (Ctrl+Shift+P) and search for "MCP: Open Visual Query Builder".
-
-3. Use the drag-and-drop interface to create your query. The query will be displayed in the query editor.
-
-4. Click the "Run Query" button to execute the query. The results will be displayed in the output pane.
-
-### Using Advanced Query Features
-
-1. You can use advanced query features such as parameterized queries, query execution plans, and query optimization hints.
-
-2. To run a parameterized query, use the `runParameterizedQuery` method in the MCP connector:
-   ```js
-   const connector = new KustoMCPConnector();
-   await connector.initialize();
-   const parameters = { param1: 'value1', param2: 'value2' };
-   const result = await connector.runParameterizedQuery('Your Kusto Query with @param1 and @param2', parameters);
-   console.log(result);
-   ```
-
-3. To get a query execution plan, use the `getQueryExecutionPlan` method in the MCP connector:
-   ```js
-   const connector = new KustoMCPConnector();
-   await connector.initialize();
-   const executionPlan = await connector.getQueryExecutionPlan('Your Kusto Query');
-   console.log(executionPlan);
-   ```
-
-4. To run a query with optimization hints, use the `runQueryWithOptimizationHints` method in the MCP connector:
-   ```js
-   const connector = new KustoMCPConnector();
-   await connector.initialize();
-   const optimizationHints = 'Your optimization hints';
-   const result = await connector.runQueryWithOptimizationHints('Your Kusto Query', optimizationHints);
-   console.log(result);
-   ```
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
