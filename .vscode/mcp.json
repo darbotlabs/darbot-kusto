@@ -3,22 +3,8 @@
     "kusto": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/src/cli.js",
-        "--cluster", "${input:kustoCluster}",
-        "--database", "${input:kustoDatabase}"
+        "${workspaceFolder}/src/cli.js"
       ]
     }
-  },
-  "inputs": [
-    {
-      "id": "kustoCluster",
-      "type": "promptString",
-      "description": "Kusto Cluster URL"
-    },
-    {
-      "id": "kustoDatabase",
-      "type": "promptString",
-      "description": "Kusto Database Name"
-    }
-  ]
+  }
 }
