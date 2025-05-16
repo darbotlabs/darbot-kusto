@@ -1,20 +1,58 @@
-const { Client } = require("@microsoft/microsoft-graph-client");
-const { TokenCredentialAuthenticationProvider } = require("@microsoft/microsoft-graph-auth");
-const { DefaultAzureCredential } = require("@azure/identity");
+const { Client, KustoConnectionStringBuilder } = require("azure-kusto-data");
+const { DefaultAzureCredential, ClientSecretCredential } = require("@azure/identity");
 const kustoQueryTemplates = require('./kustoQueryTemplates');
 
 class KustoMCPConnector {
-  constructor() {
+  /**
+   * @param {string} clusterUrl - The Kusto cluster URL
+   * @param {string} database - The Kusto database name
+   * @param {object} [options] - Optional. { token: string, aadAppId: string, aadAppSecret: string, tenantId: string }
+   */
+  constructor(clusterUrl, database, options = {}) {
+    this.clusterUrl = clusterUrl;
+    this.database = database;
+    this.options = options;
     this.client = null;
   }
 
-  async initialize() {
-    const credential = new DefaultAzureCredential();
-    const authProvider = new TokenCredentialAuthenticationProvider(credential, {
-      scopes: ["https://graph.microsoft.com/.default"],
-    });
 
-    this.client = Client.initWithMiddleware({ authProvider });
+  static createCredential(opts = {}) {
+    // Priority: Token > AAD App > DefaultAzureCredential
+    if (opts.token) {
+      return { type: 'token', value: opts.token };
+    }
+    if (opts.aadAppId && opts.aadAppSecret && opts.tenantId) {
+      return {
+        type: 'aadApp',
+        value: new ClientSecretCredential(opts.tenantId, opts.aadAppId, opts.aadAppSecret)
+      };
+    }
+    return { type: 'default', value: new DefaultAzureCredential() };
+  }
+
+  async initialize() {
+    let kcsb;
+    const cred = KustoMCPConnector.createCredential(this.options);
+    if (cred.type === 'token') {
+      kcsb = KustoConnectionStringBuilder.withAadAccessToken(this.clusterUrl, cred.value);
+      this.client = new Client(kcsb);
+      return;
+    }
+    if (cred.type === 'aadApp') {
+      // Use token provider for AAD App
+      kcsb = KustoConnectionStringBuilder.withTokenProvider(this.clusterUrl, async () => {
+        const token = await cred.value.getToken("https://kusto.kusto.windows.net/.default");
+        return token.token;
+      });
+      this.client = new Client(kcsb);
+      return;
+    }
+    // DefaultAzureCredential
+    kcsb = KustoConnectionStringBuilder.withTokenProvider(this.clusterUrl, async () => {
+      const token = await cred.value.getToken("https://kusto.kusto.windows.net/.default");
+      return token.token;
+    });
+    this.client = new Client(kcsb);
   }
 
   getQueryTemplate(templateName) {
@@ -25,19 +63,14 @@ class KustoMCPConnector {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
-
     if (templateName) {
       query = this.getQueryTemplate(templateName);
       if (!query) {
-        throw new Error(`Query template "${templateName}" not found.`);
+        throw new Error(`Query template \"${templateName}\" not found.`);
       }
     }
-
-    const result = await this.client
-      .api("/kusto/query")
-      .post({ query });
-
-    return result;
+    const result = await this.client.execute(this.database, query);
+    return result.primaryResults ? result.primaryResults[0] : result;
   }
 
   async runParameterizedQuery(query, parameters) {
@@ -47,11 +80,8 @@ class KustoMCPConnector {
 
     const parameterizedQuery = this.applyParameters(query, parameters);
 
-    const result = await this.client
-      .api("/kusto/query")
-      .post({ query: parameterizedQuery });
-
-    return result;
+    const result = await this.client.execute(this.database, parameterizedQuery);
+    return result.primaryResults ? result.primaryResults[0] : result;
   }
 
   applyParameters(query, parameters) {
@@ -68,25 +98,23 @@ class KustoMCPConnector {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
-    const result = await this.client
-      .api("/kusto/query/executionPlan")
-      .post({ query });
-
-    return result;
+    // Kusto SDK does not have a direct method for execution plan, but you can use .executeQueryV1 with a special command if needed
+    // For now, just run the query
+    const result = await this.client.execute(this.database, query);
+    return result.primaryResults ? result.primaryResults[0] : result;
   }
 
   async runQueryWithOptimizationHints(query, optimizationHints) {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
-
     const queryWithHints = `${query} ${optimizationHints}`;
+    const result = await this.client.execute(this.database, queryWithHints);
+    return result.primaryResults ? result.primaryResults[0] : result;
+  }
 
-    const result = await this.client
-      .api("/kusto/query")
-      .post({ query: queryWithHints });
-
-    return result;
+  static listTemplateNames() {
+    return Object.keys(kustoQueryTemplates);
   }
 }
 

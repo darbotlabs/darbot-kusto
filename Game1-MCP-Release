@@ -1,0 +1,158 @@
+# Game1-MCP-Release
+
+## Level 1 – Inventory & Cleanup
+
+**Objective:** Ship only what we need.
+
+### Tasks
+
+1.  `package.json`
+    *   Remove `@microsoft/microsoft-graph-*` and `azure-kusto-ingest`.
+    *   Add `"@azure/identity": "^4"` to dependencies.
+    *   Add `"files": ["src", "LICENSE", "README.md"]`.
+    *   Add `"prepublishOnly": "npm test"`.
+    *   Add `"type": "module"` **or** ensure all `require` calls remain CommonJS.
+    *   Fill `"author"`, `"repository"`, `"keywords"`.
+    *   Ensure `module.exports = KustoMCPConnector` at end of `src/mcpConnector.js`.
+    *   Ensure all static methods are exported on the class.
+    *   Ensure all test imports use `const KustoMCPConnector = require('../../src/mcpConnector');`.
+    *   If tests fail with "not a constructor" or "not a function", add a `console.log('LOADED mcpConnector.js');` to the top of `src/mcpConnector.js` and re-run tests. This can resolve caching or loading issues.
+    *   If tests fail with "not a function", clean `node_modules` and reinstall.
+
+2.  `.npmignore` (or rely on `files`) – exclude test, .vscode, install.ps1.
+
+3.  LICENSE – update copyright year.
+
+4.  If npm or test errors occur:
+    *   Delete `node_modules` and run `npm install`.
+    *   Ensure `package.json` is valid JSON and not empty.
+    *   Re-run `npm test` after any dependency or test file changes.
+
+### Validation Round 1
+
+Run in terminal:
+
+```sh
+npm pack --dry-run
+```
+
+Pass if the tarball shows only src, README.md, LICENSE, package.json.
+
+---
+
+## Level 2 – Code Boss Fight: CLI & Connector
+
+**Objective:** Finalize runtime behaviour.
+
+### Tasks
+
+1.  `mcpConnector.js`
+    *   Implement `createCredential(opts)` returning
+        – `DefaultAzureCredential` (default)
+        – `ClientSecretCredential` when `aadAppId`/`aadAppSecret`/`tenantId` are supplied
+        – `AccessToken` when plain `token` string is supplied.
+    *   Replace any leftover `client.api()` calls with `client.execute(database, query)`.
+    *   Export a helper to list template names.
+
+2.  `cli.js`
+    *   Add `yargs` options: `--template`, `--token`, `--aadAppId`, `--aadAppSecret`, `--tenantId`.
+    *   On `--template <name>` lookup in `kustoQueryTemplates.js`.
+    *   Improve error printing: show `statusCode`, `code`, `message`, and suggest VPN check on `ETIMEDOUT`.
+    *   Exit with code 1 on failure.
+
+### Validation Round 2
+
+1.  `node cli.js --help` lists new flags.
+2.  `node cli.js --cluster <publicCluster> --database Samples query "print 1"` returns `1`.
+3.  `node cli.js --cluster bad --database bad query "print 1"` exits 1 and prints friendly error.
+
+---
+
+## Level 3 – MCP Compliance Dungeon
+
+**Objective:** Single, unambiguous install path.
+
+### Tasks
+
+1.  Delete `install.ps1` **or** strip it down to dependency install only.
+2.  Remove `mcp.connector` from `settings.json`.
+3.  Provide **one** sample MCP config in README and `/docs/mcp.json.example`:
+
+```jsonc
+"darbot-kusto": {
+  "command": "npx",
+  "args": ["@darbotlabs/darbot-kusto"]
+}
+```
+
+### Validation Round 3
+
+Open MCP UI → “List Servers” shows **darbot-kusto** with Start button.
+
+---
+
+## Level 4 – Testing Arena
+
+**Objective:** Green tests everywhere.
+
+### Tasks
+
+1.  Delete obsolete Graph stubs/tests.
+2.  Unit tests:
+    *   connector credential selection (3 cases).
+    *   template lookup.
+3.  Integration test: run CLI against ADX public cluster (skip if `CI` env is true).
+4.  Replace flaky VS Code puppeteer E2E with `node src/cli.js` smoke test (or `npx` if published).
+    *   If smoke test times out, increase the timeout in the test file (e.g., `this.timeout(10000);`).
+5.  Add GitHub Action: `npm ci`, `npm run lint`, `npm test`.
+
+### Validation Round 4
+
+1.  Run `npm test` and ensure all tests pass locally and in CI.
+2.  If any test fails with "not a function" or import error, repeat the clean/install/test steps above.
+3.  If the CLI smoke test fails, ensure you use `node src/cli.js` for local agent validation, and `npx` only after publish.
+
+---
+
+## Level 5 – Docs & Community Tavern
+
+**Objective:** World-class onboarding.
+
+### Tasks
+
+1.  README.md – keep quick start, move advanced docs to `docs/`.
+2.  Add `CHANGELOG.md` (start with **0.9.0-beta**).
+3.  Add `CONTRIBUTING.md` (issues, PR flow, coding style).
+4.  Add `docs/troubleshooting.md` (VPN, auth, common HTTP codes).
+5.  Sanitize examples – remove real secrets.
+
+### Validation Round 5
+
+`npm run lint-md` (or `markdownlint`) passes, links resolve.
+
+---
+
+## Final Boss – Release & Tag
+
+**Objective:** Publish the beta.
+
+### Tasks
+
+1.  `npm version 0.9.0-beta --no-git-tag-version`
+2.  Commit `CHANGELOG.md`, tag `v0.9.0-beta`.
+3.  Push to `main`; CI should publish with `npm publish --tag beta`.
+4.  Announce release in GitHub Releases with highlights.
+
+### Validation Round 6 (Victory Screen)
+
+```sh
+npx @darbotlabs/darbot-kusto --version
+```
+
+Outputs `0.9.0-beta`.
+
+MCP quick config starts server and executes a sample query successfully.
+
+---
+
+🎉 Complete all six levels to finish the Beta-Release Quest!

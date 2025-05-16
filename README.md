@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="logo.png" alt="darbot-kusto logo" width="120"/>
+</p>
+
+# darbot-kusto
+
 
 # darbot-kusto
 

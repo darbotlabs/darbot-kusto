@@ -1,0 +1,24 @@
+{
+  "servers": {
+    "kusto": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/src/cli.js",
+        "--cluster", "${input:kustoCluster}",
+        "--database", "${input:kustoDatabase}"
+      ]
+    }
+  },
+  "inputs": [
+    {
+      "id": "kustoCluster",
+      "type": "promptString",
+      "description": "Kusto Cluster URL"
+    },
+    {
+      "id": "kustoDatabase",
+      "type": "promptString",
+      "description": "Kusto Database Name"
+    }
+  ]
+}
