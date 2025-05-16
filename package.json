@@ -1,6 +1,6 @@
 {
   "name": "@darbotlabs/darbot-kusto",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "A connector for running Kusto queries from VSCode",
   "main": "src/mcpConnector.js",
   "bin": {
