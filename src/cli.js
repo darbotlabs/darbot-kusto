@@ -9,15 +9,33 @@ const argv = yargs
   .option('cluster', {
     alias: 'c',
     describe: 'Kusto cluster URL',
-    type: 'string',
-    demandOption: true
+    type: 'string'
   })
   .option('database', {
     alias: 'd',
     describe: 'Kusto database name',
-    type: 'string',
-    demandOption: true
+    type: 'string'
   })
+// Config helper for persistent user config
+const fs = require('fs');
+const path = require('path');
+const inquirer = require('inquirer');
+const CONFIG_PATH = path.join(
+  process.env.APPDATA || path.join(process.env.HOME || '', '.config'),
+  'darbot-kusto',
+  'config.json'
+);
+function readConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+function writeConfig(cfg) {
+  fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
+}
   .option('token', {
     describe: 'AAD access token',
     type: 'string'
@@ -50,13 +68,29 @@ const argv = yargs
 
 
 async function main() {
+
+  // Load/persist cluster/database config
+  let { cluster, database } = argv;
+  const saved = readConfig();
+  if (!cluster) cluster = saved.cluster;
+  if (!database) database = saved.database;
+  if (!cluster || !database) {
+    const answers = await inquirer.prompt([
+      { name: 'cluster', type: 'input', message: 'Kusto cluster URL', when: () => !cluster },
+      { name: 'database', type: 'input', message: 'Kusto database name', when: () => !database }
+    ]);
+    cluster = cluster || answers.cluster;
+    database = database || answers.database;
+    writeConfig({ cluster, database });
+  }
+
   const options = {
     token: argv.token,
     aadAppId: argv.aadAppId,
     aadAppSecret: argv.aadAppSecret,
     tenantId: argv.tenantId
   };
-  const connector = new KustoMCPConnector(argv.cluster, argv.database, options);
+  const connector = new KustoMCPConnector(cluster, database, options);
   await connector.initialize();
 
   if (argv._.includes('query')) {
