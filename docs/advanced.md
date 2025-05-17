@@ -24,7 +24,7 @@ Modify the `args` to include the token. **Note:** This is generally not recommen
 "darbot-kusto": {
   "command": "npx",
   "args": [
-    "@darbotlabs/darbot-kusto",
+    "@darbotlabs/darbot-kusto/src/server.js",
     "--token",
     "YOUR_ACCESS_TOKEN" // Replace with your token or use a secure way to inject this
   ]
@@ -50,7 +50,7 @@ npx @darbotlabs/darbot-kusto --cluster <YourCluster> --database <YourDatabase> -
 "darbot-kusto": {
   "command": "npx",
   "args": [
-    "@darbotlabs/darbot-kusto",
+    "@darbotlabs/darbot-kusto/src/server.js",
     "--aadAppId",
     "YOUR_APP_ID",
     "--aadAppSecret",
@@ -137,7 +137,7 @@ If any of the queries fail, the output will indicate which query failed and prov
 "darbot-kusto": {
   "command": "npx",
   "args": [
-    "@darbotlabs/darbot-kusto",
+    "@darbotlabs/darbot-kusto/src/server.js",
     "audit"
   ]
 }

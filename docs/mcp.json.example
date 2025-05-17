@@ -1,6 +1,6 @@
 {
   "darbot-kusto": {
     "command": "npx",
-    "args": ["@darbotlabs/darbot-kusto"]
+    "args": ["@darbotlabs/darbot-kusto/src/server.js"]
   }
 }

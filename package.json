@@ -9,7 +9,7 @@
   "scripts": {
     "install-dependencies": "pwsh ./install.ps1",
     "prepublishOnly": "npm test",
-    "test": "mocha test/**/*.test.js",
+    "test": "node node_modules/mocha/bin/mocha test/**/*.test.js",
     "lint-md": "markdownlint --fix **/*.md --ignore node_modules"
   },
   "dependencies": {

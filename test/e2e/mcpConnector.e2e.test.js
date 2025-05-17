@@ -3,7 +3,10 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-describe('KustoMCPConnector Smoke Test', () => {
+// Skip end-to-end tests in CI or offline environments
+const describeOrSkip = process.env.CI ? describe.skip : describe;
+
+describeOrSkip('KustoMCPConnector Smoke Test', () => {
   it('should run a Kusto query using the local CLI', function(done) {
     this.timeout(10000);
     exec('node src/cli.js --cluster https://help.kusto.windows.net --database Samples query "print 1"', (error, stdout, stderr) => {

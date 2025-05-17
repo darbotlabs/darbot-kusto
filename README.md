@@ -18,7 +18,7 @@ Add this to your MCP config (VS Code, Claude Desktop, etc):
 "darbot-kusto": {
   "command": "npx",
   "args": [
-    "@darbotlabs/darbot-kusto"
+    "@darbotlabs/darbot-kusto/src/server.js"
   ]
 }
 ```
@@ -71,7 +71,7 @@ The MCP connector allows you to run Kusto queries from the MCP UI. You can confi
 "darbot-kusto": {
   "command": "npx",
   "args": [
-    "@darbotlabs/darbot-kusto"
+    "@darbotlabs/darbot-kusto/src/server.js"
   ]
 }
 ```
