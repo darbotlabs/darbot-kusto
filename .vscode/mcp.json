@@ -3,7 +3,7 @@
     "kusto": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/src/cli.js"
+        "${workspaceFolder}/src/server.js"
       ]
     }
   }
