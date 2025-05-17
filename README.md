@@ -24,6 +24,7 @@ Add this to your MCP config (VS Code, Claude Desktop, etc):
 ```
 
 You can now start the server from the MCP UI and run Kusto queries securely using your Windows/Entra/az login credentials by default.
+Cluster and database information will be requested when you run your first query, so they are not required in the MCP configuration.
 For more detailed installation, usage, and advanced features, please see the [documentation in the docs folder](./docs/).
 
 ## Authentication
