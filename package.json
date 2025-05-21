@@ -2,13 +2,15 @@
   "name": "@darbotlabs/darbot-kusto",
   "version": "0.9.6",
   "description": "A connector for running Kusto queries from VSCode",
-  "main": "src/mcpConnector.js",
+  "main": "lib/mcpConnector.js",
   "bin": {
-    "darbot-kusto": "./src/cli.js"
+    "darbot-kusto": "./lib/cli.js"
   },
   "scripts": {
     "install-dependencies": "pwsh ./install.ps1",
-    "prepublishOnly": "npm test",
+    "build": "tsc",
+    "pretest": "npm run build",
+    "prepublishOnly": "npm run build && npm test",
     "test": "node node_modules/mocha/bin/mocha test/**/*.test.js",
     "lint-md": "markdownlint --fix **/*.md --ignore node_modules"
   },
@@ -22,10 +24,12 @@
     "chai": "^4.3.0",
     "markdownlint-cli": "^0.44.0",
     "mocha": "^10.0.0",
-    "sinon": "^15.0.0"
+    "sinon": "^15.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^18.0.0"
   },
   "files": [
-    "src",
+    "lib",
     "LICENSE",
     "README.md"
   ],
@@ -51,7 +55,7 @@
         "label": "Darbot Kusto",
         "command": "npx",
         "args": [
-          "@darbotlabs/darbot-kusto/src/server.js"
+          "@darbotlabs/darbot-kusto/lib/server.js"
         ]
       }
     ]

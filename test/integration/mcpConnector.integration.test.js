@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const KustoMCPConnector = require('../../src/mcpConnector');
+const KustoMCPConnector = require('../../lib/mcpConnector');
 
 // Skip expensive integration tests when running in CI or offline
 const describeOrSkip = process.env.CI ? describe.skip : describe;
