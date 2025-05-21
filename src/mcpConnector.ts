@@ -1,23 +1,33 @@
-const { Client, KustoConnectionStringBuilder } = require("azure-kusto-data");
-const { DefaultAzureCredential, ClientSecretCredential } = require("@azure/identity");
-const kustoQueryTemplates = require('./kustoQueryTemplates');
+import { Client, KustoConnectionStringBuilder } from "azure-kusto-data";
+import { DefaultAzureCredential, ClientSecretCredential } from "@azure/identity";
+import kustoQueryTemplates from './kustoQueryTemplates';
 
-class KustoMCPConnector {
-  /**
-   * @param {string} clusterUrl - The Kusto cluster URL
-   * @param {string} database - The Kusto database name
-   * @param {object} [options] - Optional. { token: string, aadAppId: string, aadAppSecret: string, tenantId: string }
-   */
-  constructor(clusterUrl, database, options = {}) {
+export interface ConnectorOptions {
+  token?: string;
+  aadAppId?: string;
+  aadAppSecret?: string;
+  tenantId?: string;
+}
+
+type Credential =
+  | { type: 'token'; value: string }
+  | { type: 'aadApp'; value: ClientSecretCredential }
+  | { type: 'default'; value: DefaultAzureCredential };
+
+export class KustoMCPConnector {
+  private clusterUrl: string;
+  private database: string;
+  private options: ConnectorOptions;
+  private client: Client | null;
+
+  constructor(clusterUrl: string, database: string, options: ConnectorOptions = {}) {
     this.clusterUrl = clusterUrl;
     this.database = database;
     this.options = options;
     this.client = null;
   }
 
-
-  static createCredential(opts = {}) {
-    // Priority: Token > AAD App > DefaultAzureCredential
+  static createCredential(opts: ConnectorOptions = {}): Credential {
     if (opts.token) {
       return { type: 'token', value: opts.token };
     }
@@ -30,8 +40,8 @@ class KustoMCPConnector {
     return { type: 'default', value: new DefaultAzureCredential() };
   }
 
-  async initialize() {
-    let kcsb;
+  async initialize(): Promise<void> {
+    let kcsb: KustoConnectionStringBuilder;
     const cred = KustoMCPConnector.createCredential(this.options);
     if (cred.type === 'token') {
       kcsb = KustoConnectionStringBuilder.withAadAccessToken(this.clusterUrl, cred.value);
@@ -39,7 +49,6 @@ class KustoMCPConnector {
       return;
     }
     if (cred.type === 'aadApp') {
-      // Use token provider for AAD App
       kcsb = KustoConnectionStringBuilder.withTokenProvider(this.clusterUrl, async () => {
         const token = await cred.value.getToken("https://kusto.kusto.windows.net/.default");
         return token.token;
@@ -47,7 +56,6 @@ class KustoMCPConnector {
       this.client = new Client(kcsb);
       return;
     }
-    // DefaultAzureCredential
     kcsb = KustoConnectionStringBuilder.withTokenProvider(this.clusterUrl, async () => {
       const token = await cred.value.getToken("https://kusto.kusto.windows.net/.default");
       return token.token;
@@ -55,25 +63,25 @@ class KustoMCPConnector {
     this.client = new Client(kcsb);
   }
 
-  getQueryTemplate(templateName) {
-    return kustoQueryTemplates[templateName] || null;
+  getQueryTemplate(templateName: string): string | null {
+    return (kustoQueryTemplates as Record<string, string>)[templateName] || null;
   }
 
-  async runQuery(query, templateName = null) {
+  async runQuery(query: string | null, templateName: string | null = null): Promise<any> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
     if (templateName) {
       query = this.getQueryTemplate(templateName);
       if (!query) {
-        throw new Error(`Query template \"${templateName}\" not found.`);
+        throw new Error(`Query template "${templateName}" not found.`);
       }
     }
-    const result = await this.client.execute(this.database, query);
-    return result.primaryResults ? result.primaryResults[0] : result;
+    const result = await this.client.execute(this.database, query!);
+    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
   }
 
-  async runParameterizedQuery(query, parameters) {
+  async runParameterizedQuery(query: string, parameters: Record<string, string>): Promise<any> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
@@ -81,10 +89,10 @@ class KustoMCPConnector {
     const parameterizedQuery = this.applyParameters(query, parameters);
 
     const result = await this.client.execute(this.database, parameterizedQuery);
-    return result.primaryResults ? result.primaryResults[0] : result;
+    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
   }
 
-  applyParameters(query, parameters) {
+  applyParameters(query: string, parameters: Record<string, string>): string {
     let parameterizedQuery = query;
     for (const [key, value] of Object.entries(parameters)) {
       const placeholder = `@${key}`;
@@ -93,31 +101,29 @@ class KustoMCPConnector {
     return parameterizedQuery;
   }
 
-  async getQueryExecutionPlan(query) {
+  async getQueryExecutionPlan(query: string): Promise<any> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
-    // Kusto SDK does not have a direct method for execution plan, but you can use .executeQueryV1 with a special command if needed
-    // For now, just run the query
     const result = await this.client.execute(this.database, query);
-    return result.primaryResults ? result.primaryResults[0] : result;
+    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
   }
 
-  async runQueryWithOptimizationHints(query, optimizationHints) {
+  async runQueryWithOptimizationHints(query: string, optimizationHints: string): Promise<any> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
     const queryWithHints = `${query} ${optimizationHints}`;
     const result = await this.client.execute(this.database, queryWithHints);
-    return result.primaryResults ? result.primaryResults[0] : result;
+    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
   }
 
-  static listTemplateNames() {
+  static listTemplateNames(): string[] {
     return Object.keys(kustoQueryTemplates);
   }
 
-  async runAudit() {
+  async runAudit(): Promise<Array<{ query: string; status: string; error?: string }>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
@@ -128,16 +134,16 @@ class KustoMCPConnector {
       { query: "StormEvents | summarize count() by State", expected: 50 }
     ];
 
-    const results = [];
+    const results: Array<{ query: string; status: string; error?: string }> = [];
     for (const { query, expected } of auditQueries) {
       try {
         const result = await this.client.execute(this.database, query);
-        const rowCount = result.primaryResults[0].rows.length;
+        const rowCount = (result as any).primaryResults[0].rows.length;
         if (rowCount !== expected) {
           throw new Error(`Query "${query}" returned ${rowCount} rows, expected ${expected}`);
         }
         results.push({ query, status: 'success' });
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Audit query failed: ${query}`);
         console.error(error);
         results.push({ query, status: 'failure', error: error.message });
@@ -147,18 +153,18 @@ class KustoMCPConnector {
     return results;
   }
 
-  async runQueryWithEdgeCaseHandling(query) {
+  async runQueryWithEdgeCaseHandling(query: string): Promise<any> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
     try {
       const result = await this.client.execute(this.database, query);
-      if (!result.primaryResults || result.primaryResults.length === 0) {
+      if (!(result as any).primaryResults || (result as any).primaryResults.length === 0) {
         throw new Error("Query returned empty results.");
       }
-      return result.primaryResults[0];
-    } catch (error) {
+      return (result as any).primaryResults[0];
+    } catch (error: any) {
       if (error.message.includes("Query returned empty results")) {
         console.error("Edge case: Empty results.");
       } else if (error.message.includes("Invalid query")) {
@@ -172,15 +178,15 @@ class KustoMCPConnector {
     }
   }
 
-  async runQueryWithNetworkIssueHandling(query) {
+  async runQueryWithNetworkIssueHandling(query: string): Promise<any> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
     try {
       const result = await this.client.execute(this.database, query);
-      return result.primaryResults ? result.primaryResults[0] : result;
-    } catch (error) {
+      return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    } catch (error: any) {
       if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
         console.error('Network error: Unable to reach the Kusto cluster.');
         console.error('Recommendation: Check your VPN connection, firewall, or network settings.');
@@ -190,4 +196,5 @@ class KustoMCPConnector {
   }
 }
 
-module.exports = KustoMCPConnector;
+export default KustoMCPConnector;
+(module as any).exports = KustoMCPConnector;

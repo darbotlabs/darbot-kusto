@@ -1,24 +1,29 @@
-const KustoMCPConnector = require('./mcpConnector');
-const yargs = require('yargs');
-const kustoQueryTemplates = require('./kustoQueryTemplates');
+import KustoMCPConnector from './mcpConnector';
+import yargs from 'yargs';
+import kustoQueryTemplates from './kustoQueryTemplates';
+import * as fs from 'fs';
+import * as path from 'path';
+import inquirer from 'inquirer';
 
-// Config helper for persistent user config
-const fs = require('fs');
-const path = require('path');
-const inquirer = require('inquirer');
+const INDEX_DIR = path.join(__dirname, '..', 'query-index');
+const SHARED_INDEX_DIR = path.join(INDEX_DIR, 'shared');
+const LOCAL_INDEX_DIR = path.join(INDEX_DIR, 'local');
+
 const CONFIG_PATH = path.join(
   process.env.APPDATA || path.join(process.env.HOME || '', '.config'),
   'darbot-kusto',
   'config.json'
 );
-function readConfig() {
+
+function readConfig(): Record<string, any> {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
   } catch {
     return {};
   }
 }
-function writeConfig(cfg) {
+
+function writeConfig(cfg: Record<string, any>): void {
   fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
 }
@@ -55,21 +60,45 @@ const argv = yargs
     type: 'string',
     choices: Object.keys(kustoQueryTemplates)
   })
-  .command('query [query]', 'Run a Kusto query', (yargs) => {
-    yargs.positional('query', {
+  .command('query [query]', 'Run a Kusto query', yargs => {
+    return yargs.positional('query', {
       describe: 'The Kusto query to run (ignored if --template is used)',
       type: 'string'
     });
   })
   .command('audit', 'Perform an end-to-end functionality audit', () => {})
-  .help()
-  .argv;
+  .command('index <name> [file]', 'Index a query locally or globally', yargs => {
+    return yargs
+      .positional('name', { describe: 'Name for the query', type: 'string' })
+      .positional('file', { describe: 'File containing the query', type: 'string' })
+      .option('global', {
+        alias: 'g',
+        type: 'boolean',
+        describe: 'Store the query in the shared index'
+      })
+      .option('query', { describe: 'Query string to index', type: 'string' });
+  })
+  .help().argv;
 
+async function main(): Promise<void> {
+  if ((argv as any)._.includes('index')) {
+    const dir = (argv as any).global ? SHARED_INDEX_DIR : LOCAL_INDEX_DIR;
+    fs.mkdirSync(dir, { recursive: true });
+    let query = (argv as any).query || '';
+    if ((argv as any).file) {
+      query = fs.readFileSync((argv as any).file, 'utf-8');
+    }
+    if (!query) {
+      const ans = await inquirer.prompt([{ name: 'query', type: 'editor', message: 'Enter query' }]);
+      query = ans.query;
+    }
+    const dest = path.join(dir, `${(argv as any).name}.kql`);
+    fs.writeFileSync(dest, query);
+    console.log(`Indexed query saved to ${dest}`);
+    return;
+  }
 
-async function main() {
-
-  // Load/persist cluster/database config
-  let { cluster, database } = argv;
+  let { cluster, database } = argv as any;
   const saved = readConfig();
   if (!cluster) cluster = saved.cluster;
   if (!database) database = saved.database;
@@ -84,37 +113,35 @@ async function main() {
   }
 
   const options = {
-    token: argv.token,
-    aadAppId: argv.aadAppId,
-    aadAppSecret: argv.aadAppSecret,
-    tenantId: argv.tenantId
+    token: (argv as any).token,
+    aadAppId: (argv as any).aadAppId,
+    aadAppSecret: (argv as any).aadAppSecret,
+    tenantId: (argv as any).tenantId
   };
   const connector = new KustoMCPConnector(cluster, database, options);
   await connector.initialize();
 
-  if (argv._.includes('query')) {
+  if ((argv as any)._.includes('query')) {
     try {
-      // Input validation for query syntax
-      if (!argv.template && !argv.query) {
+      if (!(argv as any).template && !(argv as any).query) {
         throw new Error('Query or template must be provided.');
       }
-      if (argv.query && !isValidQuerySyntax(argv.query)) {
+      if ((argv as any).query && !isValidQuerySyntax((argv as any).query)) {
         throw new Error('Invalid query syntax.');
       }
 
       let result;
-      if (argv.template) {
-        result = await connector.runQuery(null, argv.template);
+      if ((argv as any).template) {
+        result = await connector.runQuery(null, (argv as any).template);
       } else {
-        result = await connector.runQuery(argv.query);
+        result = await connector.runQuery((argv as any).query);
       }
-      // Print only the first row if result is a table
       if (result && result.rows && result.rows.length > 0) {
         console.log(JSON.stringify(result.rows[0]));
       } else {
         console.log(JSON.stringify(result));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Query failed!');
       if (error.statusCode || error.code || error.message) {
         if (error.statusCode) console.error(`StatusCode: ${error.statusCode}`);
@@ -127,11 +154,11 @@ async function main() {
       }
       process.exit(1);
     }
-  } else if (argv._.includes('audit')) {
+  } else if ((argv as any)._.includes('audit')) {
     try {
       const auditResults = await connector.runAudit();
       console.log('Audit completed successfully:', auditResults);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Audit failed!');
       if (error.statusCode || error.code || error.message) {
         if (error.statusCode) console.error(`StatusCode: ${error.statusCode}`);
@@ -144,7 +171,7 @@ async function main() {
       }
       process.exit(1);
     }
-  } else if (argv._.includes('list-templates')) {
+  } else if ((argv as any)._.includes('list-templates')) {
     console.log('Available templates:', KustoMCPConnector.listTemplateNames().join(', '));
   } else {
     console.log('Unknown command');
@@ -152,8 +179,7 @@ async function main() {
   }
 }
 
-function isValidQuerySyntax(query) {
-  // Basic validation for query syntax
+function isValidQuerySyntax(query: string): boolean {
   const forbiddenKeywords = ['DROP', 'DELETE', 'UPDATE'];
   for (const keyword of forbiddenKeywords) {
     if (query.toUpperCase().includes(keyword)) {
@@ -163,7 +189,7 @@ function isValidQuerySyntax(query) {
   return true;
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exit(1);
 });

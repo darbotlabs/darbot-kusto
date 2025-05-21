@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const KustoMCPConnector = require('../../src/mcpConnector');
+const KustoMCPConnector = require('../../lib/mcpConnector');
 
 describe('KustoMCPConnector', () => {
   describe('createCredential', () => {
