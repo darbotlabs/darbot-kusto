@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const sinon = require('sinon');
 const KustoMCPConnector = require('../../lib/mcpConnector');
 
 describe('KustoMCPConnector', () => {
@@ -26,6 +27,22 @@ describe('KustoMCPConnector', () => {
       expect(names).to.include('template1');
       expect(names).to.include('template2');
       expect(names).to.include('template3');
+    });
+  });
+
+  describe('runQuery', () => {
+    it('should return typed query results', async () => {
+      const connector = new KustoMCPConnector('cluster', 'db');
+      connector.client = { execute: sinon.stub().resolves({
+        primaryResults: [{
+          columns: [{ name: 'c', type: 'int' }],
+          rows: function* () { yield { toJSON: () => ({ c: 1 }) }; }
+        }]
+      }) };
+
+      const result = await connector.runQuery('test');
+      expect(result.columns[0].name).to.equal('c');
+      expect(result.rows[0]).to.deep.equal({ c: 1 });
     });
   });
 });
