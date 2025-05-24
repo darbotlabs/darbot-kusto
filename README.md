@@ -45,6 +45,13 @@ For more options, run:
 npx @darbotlabs/darbot-kusto --help
 ```
 
+
+To check your installed version:
+
+```sh
+npx @darbotlabs/darbot-kusto --version
+```
+
 ## Common Commands
 
 - **Index a Query**
