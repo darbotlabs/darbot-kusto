@@ -44,6 +44,12 @@ For more options, run:
 npx @darbotlabs/darbot-kusto --help
 ```
 
+To check your installed version:
+
+```sh
+npx @darbotlabs/darbot-kusto --version
+```
+
 ## Contributing
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
