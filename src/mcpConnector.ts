@@ -1,6 +1,7 @@
-import { Client, KustoConnectionStringBuilder } from "azure-kusto-data";
+import { Client, KustoConnectionStringBuilder, KustoResultTable } from "azure-kusto-data";
 import { DefaultAzureCredential, ClientSecretCredential } from "@azure/identity";
 import kustoQueryTemplates from './kustoQueryTemplates';
+import { QueryResult, QueryResultRow, QueryColumn } from './queryResults';
 
 export interface ConnectorOptions {
   token?: string;
@@ -25,6 +26,15 @@ export class KustoMCPConnector {
     this.database = database;
     this.options = options;
     this.client = null;
+  }
+
+  private convertTable<T = QueryResultRow>(table: KustoResultTable): QueryResult<T> {
+    const columns: QueryColumn[] = table.columns.map(c => ({ name: c.name, type: c.type }));
+    const rows: T[] = [];
+    for (const row of table.rows()) {
+      rows.push(row.toJSON<T>());
+    }
+    return { columns, rows };
   }
 
   static createCredential(opts: ConnectorOptions = {}): Credential {
@@ -67,7 +77,7 @@ export class KustoMCPConnector {
     return (kustoQueryTemplates as Record<string, string>)[templateName] || null;
   }
 
-  async runQuery(query: string | null, templateName: string | null = null): Promise<any> {
+  async runQuery<T = QueryResultRow>(query: string | null, templateName: string | null = null): Promise<QueryResult<T>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
@@ -78,10 +88,11 @@ export class KustoMCPConnector {
       }
     }
     const result = await this.client.execute(this.database, query!);
-    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    const table = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    return this.convertTable<T>(table);
   }
 
-  async runParameterizedQuery(query: string, parameters: Record<string, string>): Promise<any> {
+  async runParameterizedQuery<T = QueryResultRow>(query: string, parameters: Record<string, string>): Promise<QueryResult<T>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
@@ -89,7 +100,8 @@ export class KustoMCPConnector {
     const parameterizedQuery = this.applyParameters(query, parameters);
 
     const result = await this.client.execute(this.database, parameterizedQuery);
-    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    const table = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    return this.convertTable<T>(table);
   }
 
   applyParameters(query: string, parameters: Record<string, string>): string {
@@ -101,22 +113,24 @@ export class KustoMCPConnector {
     return parameterizedQuery;
   }
 
-  async getQueryExecutionPlan(query: string): Promise<any> {
+  async getQueryExecutionPlan<T = QueryResultRow>(query: string): Promise<QueryResult<T>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
     const result = await this.client.execute(this.database, query);
-    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    const table = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    return this.convertTable<T>(table);
   }
 
-  async runQueryWithOptimizationHints(query: string, optimizationHints: string): Promise<any> {
+  async runQueryWithOptimizationHints<T = QueryResultRow>(query: string, optimizationHints: string): Promise<QueryResult<T>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
     const queryWithHints = `${query} ${optimizationHints}`;
     const result = await this.client.execute(this.database, queryWithHints);
-    return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    const table = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+    return this.convertTable<T>(table);
   }
 
   static listTemplateNames(): string[] {
@@ -153,7 +167,7 @@ export class KustoMCPConnector {
     return results;
   }
 
-  async runQueryWithEdgeCaseHandling(query: string): Promise<any> {
+  async runQueryWithEdgeCaseHandling<T = QueryResultRow>(query: string): Promise<QueryResult<T>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
@@ -163,7 +177,8 @@ export class KustoMCPConnector {
       if (!(result as any).primaryResults || (result as any).primaryResults.length === 0) {
         throw new Error("Query returned empty results.");
       }
-      return (result as any).primaryResults[0];
+      const table = (result as any).primaryResults[0];
+      return this.convertTable<T>(table);
     } catch (error: any) {
       if (error.message.includes("Query returned empty results")) {
         console.error("Edge case: Empty results.");
@@ -178,14 +193,15 @@ export class KustoMCPConnector {
     }
   }
 
-  async runQueryWithNetworkIssueHandling(query: string): Promise<any> {
+  async runQueryWithNetworkIssueHandling<T = QueryResultRow>(query: string): Promise<QueryResult<T>> {
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
     try {
       const result = await this.client.execute(this.database, query);
-      return (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+      const table = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
+      return this.convertTable<T>(table);
     } catch (error: any) {
       if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
         console.error('Network error: Unable to reach the Kusto cluster.');
