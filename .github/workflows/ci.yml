@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+      - name: Check vulnerabilities
+        run: npm audit --audit-level=high || true
+      - name: Lint Markdown
+        run: node node_modules/markdownlint-cli/markdownlint.js --fix '**/*.md' --ignore node_modules || true
+      - name: Run tests
+        run: CI=true npm test

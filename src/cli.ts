@@ -4,6 +4,7 @@ import kustoQueryTemplates from './kustoQueryTemplates';
 import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
+const pkg = require('../package.json');
 
 const INDEX_DIR = path.join(__dirname, '..', 'query-index');
 const SHARED_INDEX_DIR = path.join(INDEX_DIR, 'shared');
@@ -29,6 +30,8 @@ function writeConfig(cfg: Record<string, any>): void {
 }
 
 const argv = yargs
+  .version(pkg.version)
+  .alias('version', 'v')
   .option('cluster', {
     alias: 'c',
     describe: 'Kusto cluster URL',
@@ -78,9 +81,18 @@ const argv = yargs
       })
       .option('query', { describe: 'Query string to index', type: 'string' });
   })
+  .command('list-templates', 'List available query templates', () => {})
+  .command('nlquery <phrase>', 'Run a natural language query', yargs => {
+    return yargs.positional('phrase', { describe: 'Natural language phrase', type: 'string' });
+  })
   .help().argv;
 
 async function main(): Promise<void> {
+  if ((argv as any)._.includes('list-templates')) {
+    console.log('Available templates:', KustoMCPConnector.listTemplateNames().join(', '));
+    return;
+  }
+
   if ((argv as any)._.includes('index')) {
     const dir = (argv as any).global ? SHARED_INDEX_DIR : LOCAL_INDEX_DIR;
     fs.mkdirSync(dir, { recursive: true });
@@ -100,8 +112,8 @@ async function main(): Promise<void> {
 
   let { cluster, database } = argv as any;
   const saved = readConfig();
-  if (!cluster) cluster = saved.cluster;
-  if (!database) database = saved.database;
+  if (!cluster) cluster = process.env.DARBOT_KUSTO_CLUSTER || saved.cluster;
+  if (!database) database = process.env.DARBOT_KUSTO_DATABASE || saved.database;
   if (!cluster || !database) {
     const answers = await inquirer.prompt([
       { name: 'cluster', type: 'input', message: 'Kusto cluster URL', when: () => !cluster },
@@ -171,8 +183,19 @@ async function main(): Promise<void> {
       }
       process.exit(1);
     }
-  } else if ((argv as any)._.includes('list-templates')) {
-    console.log('Available templates:', KustoMCPConnector.listTemplateNames().join(', '));
+  } else if ((argv as any)._.includes('nlquery')) {
+    try {
+      const phrase = (argv as any).phrase as string;
+      const result = await connector.runNaturalLanguageQuery(phrase);
+      if (result.rows.length > 0) {
+        console.log(JSON.stringify(result.rows[0]));
+      } else {
+        console.log(JSON.stringify(result));
+      }
+    } catch (error: any) {
+      console.error('Natural language query failed:', error.message);
+      process.exit(1);
+    }
   } else {
     console.log('Unknown command');
     process.exit(1);
