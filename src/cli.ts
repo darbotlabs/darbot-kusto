@@ -10,6 +10,9 @@ const INDEX_DIR = path.join(__dirname, '..', 'query-index');
 const SHARED_INDEX_DIR = path.join(INDEX_DIR, 'shared');
 const LOCAL_INDEX_DIR = path.join(INDEX_DIR, 'local');
 
+const PACKAGE_JSON = path.join(__dirname, '..', 'package.json');
+const VERSION = JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf-8')).version;
+
 const CONFIG_PATH = path.join(
   process.env.APPDATA || path.join(process.env.HOME || '', '.config'),
   'darbot-kusto',
@@ -29,9 +32,11 @@ function writeConfig(cfg: Record<string, any>): void {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2));
 }
 
+
 const argv = yargs
   .version(pkg.version)
   .alias('version', 'v')
+
   .option('cluster', {
     alias: 'c',
     describe: 'Kusto cluster URL',
