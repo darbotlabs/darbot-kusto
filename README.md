@@ -26,6 +26,7 @@ Add this to your MCP config (VS Code, Claude Desktop, etc):
 You can now start the server from the MCP UI and run Kusto queries securely using your Windows/Entra/az login credentials by default.
 Cluster and database information will be requested when you run your first query, so they are not required in the MCP configuration.
 For more detailed installation, usage, and advanced features, please see the [documentation in the docs folder](./docs/).
+See [Common Commands](#common-commands) below for how to index queries and view template names.
 
 ## Authentication
 
@@ -43,6 +44,35 @@ For more options, run:
 ```sh
 npx @darbotlabs/darbot-kusto --help
 ```
+
+## Common Commands
+
+- **Index a Query**
+
+  Store a query locally:
+
+  ```sh
+  npx @darbotlabs/darbot-kusto index MyQuery --query "StormEvents | take 5"
+  ```
+
+  Share a query with your team:
+
+  ```sh
+  npx @darbotlabs/darbot-kusto index TeamQuery path/to/query.kql --global
+  ```
+
+  Local queries are saved in `query-index/local/` while shared ones are stored in `query-index/shared/`.
+  Execute an indexed query by passing its contents to the `query` command, e.g.:
+
+  ```sh
+  npx @darbotlabs/darbot-kusto query "$(cat query-index/local/MyQuery.kql)"
+  ```
+
+- **List Available Templates**
+
+  ```sh
+  npx @darbotlabs/darbot-kusto list-templates
+  ```
 
 ## Contributing
 
