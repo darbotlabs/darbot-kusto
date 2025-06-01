@@ -1,3 +1,5 @@
 node_modules
 lib
 query-index/local
+
+.fake

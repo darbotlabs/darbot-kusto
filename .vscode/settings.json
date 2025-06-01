@@ -3,7 +3,7 @@
   "editor.suggestOnTriggerCharacters": true,
   "editor.hover.enabled": true,
   "editor.parameterHints.enabled": true,
-  "editor.wordBasedSuggestions": true,
+  "editor.wordBasedSuggestions": "matchingDocuments",
   "editor.acceptSuggestionOnEnter": "on",
   "mcp.visualQueryBuilder": {
     "command": "MCP: Open Visual Query Builder",

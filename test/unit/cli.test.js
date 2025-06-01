@@ -1,38 +1,10 @@
 const { expect } = require('chai');
-
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const pkg = require('../../package.json');
-
-const CLI = `node ${path.join(__dirname, '..', '..', 'lib', 'cli.js')}`;
-
-describe('CLI', () => {
-  it('prints version', () => {
-    const out = execSync(`${CLI} --version`).toString().trim();
-    expect(out).to.equal(pkg.version);
-  });
-
-  it('lists templates', () => {
-    const out = execSync(`${CLI} list-templates`).toString();
-    expect(out).to.contain('template1');
-  });
-
-  it('indexes a query locally', () => {
-    const indexFile = path.join(__dirname, '..', '..', 'query-index', 'local', 'testQuery.kql');
-    if (fs.existsSync(indexFile)) fs.unlinkSync(indexFile);
-    execSync(`${CLI} index testQuery --query "print 1"`);
-    expect(fs.existsSync(indexFile)).to.be.true;
-    fs.unlinkSync(indexFile);
-  });
-});
-
-=======
 const sinon = require('sinon');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const os = require('os');
+const pkg = require('../../package.json');
 
 // helper to run the CLI with optional connector mock
 async function runCLI(args, mockConnector) {
@@ -74,7 +46,14 @@ describe('CLI', () => {
   afterEach(() => {
     sinon.restore();
     const localDir = path.join(__dirname, '../../query-index/local');
-    fs.rmSync(localDir, { recursive: true, force: true });
+    if (fs.existsSync(localDir)) {
+      fs.rmSync(localDir, { recursive: true, force: true });
+    }
+  });
+
+  it('prints version', () => {
+    const output = execSync(`node ${path.join(__dirname, '../../lib/cli.js')} --version`).toString().trim();
+    expect(output).to.equal(pkg.version);
   });
 
   it('indexes a query locally', async () => {
@@ -89,16 +68,10 @@ describe('CLI', () => {
   it('lists query templates', async () => {
     class MockConnector {
       async initialize() {}
-      static listTemplateNames() { return ['a', 'b']; }
+      static listTemplateNames() { return ['template1', 'template2']; }
     }
     await runCLI(['list-templates', '--cluster', 'c', '--database', 'd'], MockConnector);
     expect(logStub.callCount).to.be.greaterThan(0);
-  });
-
-  it('prints version information', () => {
-    const output = execSync(`node ${path.join(__dirname, '../../lib/cli.js')} --version`).toString().trim();
-    const pkg = require('../../package.json');
-    expect(output).to.equal(pkg.version);
   });
 });
 

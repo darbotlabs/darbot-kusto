@@ -2,10 +2,10 @@
   <img src="logo.png" alt="darbot-kusto logo" width="120"/>
 </p>
 
-# darbot-kusto
+# Darbot Kusto MCP
 
 
-# darbot-kusto
+# Darbot Kusto MCP
 
 A connector for running Kusto queries from VSCode.
 Darbot Labs: <https://github.com/darbotlabs/darbot-kusto>
@@ -103,6 +103,25 @@ npx @darbotlabs/darbot-kusto --version
   npx @darbotlabs/darbot-kusto list-templates
   ```
 
+## Prerequisites
+
+- **Azure CLI**: Required for authentication and running Kusto queries. Download the installer from the repository (`AzureCLI.msi`) or from the official Microsoft page.
+
+### Installing Azure CLI
+
+You can install the Azure CLI using the provided installer:
+
+```sh
+# From the root of this repository
+msiexec /i AzureCLI.msi
+```
+
+After installation, restart your terminal and verify with:
+
+```sh
+az --version
+```
+
 ## Contributing
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
@@ -148,4 +167,24 @@ You can also execute simple natural language queries:
 
 ```sh
 npx @darbotlabs/darbot-kusto nlquery "how many events last week?"
+```
+
+### Running a Kusto Query via MCP Server
+
+When configured as above, the MCP server starts a REPL (interactive prompt). You can type or send a Kusto query directly to the server:
+
+1. **Start the server** (from MCP UI or manually):
+
+   ```sh
+   npx @darbotlabs/darbot-kusto/src/server.js --cluster <ClusterUrl> --database <Database>
+   ```
+
+2. **At the `kusto>` prompt, enter your query** (e.g., `print 1`) and press Enter.
+3. **The result will be printed as JSON.**
+4. **Type `exit` or `quit` to stop the server.**
+
+You can also automate this by piping a query:
+
+```sh
+  echo "print 1" | npx @darbotlabs/darbot-kusto/src/server.js --cluster <ClusterUrl> --database <Database>
 ```

@@ -10,10 +10,6 @@ export interface ConnectorOptions {
   tenantId?: string;
 }
 
-export interface QueryResult {
-  rows: any[];
-}
-
 type Credential =
   | { type: 'token'; value: string }
   | { type: 'aadApp'; value: ClientSecretCredential }
@@ -92,11 +88,8 @@ export class KustoMCPConnector {
       if (!query) {
         throw new Error(`Query template "${templateName}" not found.`);
       }
-    }
-    const result = await this.client.execute(this.database, query!);
-
-    const primary = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
-    return { rows: primary.rows || [] };
+    }    const result = await this.client.execute(this.database, query!);
+    return this.extractQueryResult(result);
   }
 
   async runParameterizedQuery(query: string, parameters: Record<string, string>): Promise<QueryResult> {
@@ -105,12 +98,8 @@ export class KustoMCPConnector {
       throw new Error("Client not initialized. Call initialize() first.");
     }
 
-    const parameterizedQuery = this.applyParameters(query, parameters);
-
-    const result = await this.client.execute(this.database, parameterizedQuery);
-
-    const primary = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
-    return { rows: primary.rows || [] };
+    const parameterizedQuery = this.applyParameters(query, parameters);    const result = await this.client.execute(this.database, parameterizedQuery);
+    return this.extractQueryResult(result);
 
   }
 
@@ -123,7 +112,6 @@ export class KustoMCPConnector {
     return parameterizedQuery;
   }
 
-
   async getQueryExecutionPlan(query: string): Promise<QueryResult> {
 
     if (!this.client) {
@@ -131,11 +119,8 @@ export class KustoMCPConnector {
     }
 
     const result = await this.client.execute(this.database, query);
-
-    const primary = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
-    return { rows: primary.rows || [] };
+    return this.extractQueryResult(result);
   }
-
   async runQueryWithOptimizationHints(query: string, optimizationHints: string): Promise<QueryResult> {
 
     if (!this.client) {
@@ -143,10 +128,7 @@ export class KustoMCPConnector {
     }
     const queryWithHints = `${query} ${optimizationHints}`;
     const result = await this.client.execute(this.database, queryWithHints);
-
-    const primary = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
-    return { rows: primary.rows || [] };
-
+    return this.extractQueryResult(result);
   }
 
   static listTemplateNames(): string[] {
@@ -183,7 +165,6 @@ export class KustoMCPConnector {
     return results;
   }
 
-
   async runQueryWithEdgeCaseHandling(query: string): Promise<QueryResult> {
 
     if (!this.client) {
@@ -196,7 +177,7 @@ export class KustoMCPConnector {
         throw new Error("Query returned empty results.");
       }
 
-      return { rows: (result as any).primaryResults[0].rows || [] };
+      return this.extractQueryResult(result);
 
     } catch (error: any) {
       if (error.message.includes("Query returned empty results")) {
@@ -216,13 +197,9 @@ export class KustoMCPConnector {
 
     if (!this.client) {
       throw new Error("Client not initialized. Call initialize() first.");
-    }
-
-    try {
+    }    try {
       const result = await this.client.execute(this.database, query);
-
-      const primary = (result as any).primaryResults ? (result as any).primaryResults[0] : result;
-      return { rows: primary.rows || [] };
+      return this.extractQueryResult(result);
 
     } catch (error: any) {
       if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
@@ -248,6 +225,25 @@ export class KustoMCPConnector {
       throw new Error('Natural language query not recognized.');
     }
     return this.runQuery(query);
+  }
+  private extractQueryResult(result: any): QueryResult {
+    const primary = result.primaryResults ? result.primaryResults[0] : result;
+    
+    // Check if this is a proper KustoResultTable with a rows() generator
+    if (primary.rows && typeof primary.rows === 'function') {
+      return this.convertTable(primary);
+    }
+    
+    // Fallback for other result types
+    const columns: QueryColumn[] = primary.columns ? primary.columns.map((col: any) => ({
+      name: col.name || col.ColumnName,
+      type: col.dataType || col.DataType || col.type
+    })) : [];
+    
+    return {
+      columns,
+      rows: primary.rows || []
+    };
   }
 }
 
