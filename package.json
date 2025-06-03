@@ -31,7 +31,9 @@
   "files": [
     "lib",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "logo.png",
+    "src/assets"
   ],
   "author": "Darbot Labs <info@darbotlabs.com>",
   "repository": {
