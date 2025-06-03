@@ -34,7 +34,7 @@ This project provides sample implementations of telemetry in D365 FSCM. It inclu
 2. Open the solution in Visual Studio in adminstrator mode and open FastTrackFscmTelemetrySamples.sln:
 
     Create the classes, enums, tables for the code under "\TelemetryExtensionExample\bin"
-    The project structure will look like 
+    The project structure will look like
      ![My project structure](ScreenShots/ProjectStructure.png)
 
 3. Once you create all the dependencies of the project, build the project. Once the Project is successfully build, Synchronize the database as we are adding new tables and then refresh AOT
@@ -84,4 +84,3 @@ We welcome contributions to this project. To contribute:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for more details.
-

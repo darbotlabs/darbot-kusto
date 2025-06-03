@@ -1,6 +1,8 @@
 # Errors Telemetry dasboard
+
 This dashboard shows information about errors that are reported by the environments. Using this dashboard, it is possible to:
-- Investigate the nature and distributiion of the errors over time. 
+
+- Investigate the nature and distributiion of the errors over time.
 - Review the errors in the envirionemnts
 - Revire the source of errors, gruppong them by legal entity, reer type and users
 
@@ -8,7 +10,8 @@ This dashboard shows information about errors that are reported by the environme
 
 <div align=center><img src="./img/ErrorsDashboard.png"></div>
 
-## Steps to import the sample dashboard:
+## Steps to import the sample dashboard
+
   1. Import the file "dashboard-D365FO-Monitoring-Errors.json".
   
   <div align=center><img src="./img/1ImportSample.png" width="600" height="300"></div>
@@ -17,7 +20,7 @@ This dashboard shows information about errors that are reported by the environme
   
    <div align=center><img src="./img/2EditName.png" width="656" height="195"></div>
   
-  3. Click to select datasources. 
+  3. Click to select datasources.
   
   <div align=center><img src="./img/3Datasource.png" width="450" height="300"></div>
   

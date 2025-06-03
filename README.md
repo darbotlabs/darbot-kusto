@@ -4,7 +4,6 @@
 
 # Darbot Kusto MCP
 
-
 # Darbot Kusto MCP
 
 A connector for running Kusto queries from VSCode.
@@ -66,7 +65,6 @@ For more options, run:
 ```sh
 npx @darbotlabs/darbot-kusto --help
 ```
-
 
 To check your installed version:
 
@@ -131,7 +129,6 @@ Please see [CONTRIBUTING.md](./CONTRIBUTING.md).
 This project is licensed under the MIT License.
 
 ## Additional Resources
-
 
 - [Advanced Usage](./docs/advanced.md)
 - [Troubleshooting](./docs/troubleshooting.md)

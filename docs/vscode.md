@@ -6,6 +6,7 @@ This guide explains how to configure the MCP extension in VS Code to work with `
 
 1. Install the MCP extension from the VS Code marketplace.
 2. Add the following to your `mcp.json` configuration:
+
    ```json
    "darbot-kusto": {
      "command": "npx",
@@ -14,6 +15,7 @@ This guide explains how to configure the MCP extension in VS Code to work with `
      ]
    }
    ```
+
    You may provide `--cluster` and `--database` arguments or set the `DARBOT_KUSTO_CLUSTER` and `DARBOT_KUSTO_DATABASE` environment variables to avoid prompts.
 
 ## Available Tools
@@ -35,4 +37,3 @@ Create a task that runs the current file as a query and assign a keybinding to e
 ```
 
 More advanced setups can reference indexed queries from the `query-index` directory.
-
