@@ -4,8 +4,6 @@
 
 # Darbot Kusto MCP
 
-# Darbot Kusto MCP
-
 A connector for running Kusto queries from VSCode.
 Darbot Labs: <https://github.com/darbotlabs/darbot-kusto>
 
@@ -142,7 +140,7 @@ Our GitHub Actions workflow installs dependencies, lints Markdown, and runs the 
 
 ### VSCode Extension
 
-The `darbot-kusto` extension for VSCode allows you to run Kusto queries directly from the editor. You can install it from the VSCode marketplace and configure it to use your Kusto cluster and database.
+The Darbot Kusto MCP extension for VSCode allows you to run Kusto queries directly from the editor. You can install it from the VSCode marketplace and configure it to use your Kusto cluster and database.
 See [docs/vscode.md](./docs/vscode.md) for sample keybindings and tasks.
 
 ### MCP Connector
